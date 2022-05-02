@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+#check in pg hoe groot onderstaande is 
+#shared_buffers = x
+#effective_cache_size = x
+
+_real_mem_ () { 
+
+export r_m=$(( $(getconf PAGE_SIZE) * $(getconf _PHYS_PAGES)))
+echo real mem is $r_m
+
+} 
+
+_used_mem_ () { 
+
+export U_M="`ps -eo size,pid,user,command --sort -size|awk '{ nT=$1 ; printf("%20.0f MB ",nT)} {for (c=4;c<=NF;c++) {printf("%s ",$c) } print "" }'|awk '{t=t + $1} END {print t}'`"
+echo " Total used by process ${U_M} in Bytes "
+
+}
+
+_calc_it_ () { 
+
+p_s=`getconf PAGE_SIZE`
+p_p=`getconf _PHYS_PAGES`
+
+if [ ! -z "$p_p" ] || [ ! -z "$p_s" ];
+then
+	shmall=$((2*$p_p/3))
+	#shmall=$(($p_p / 2 ))
+	m_f=`expr ${r_m} - ${U_M}`
+	shmmax=`expr $shmall \* $p_s` 
+	#echo kernel.shmmax = $m_f
+	if test ! -f /etc/sysctl.con 
+	then
+		echo kernel.shmall = $shmall
+		echo kernel.shmax = $shmmax
+	fi
+else
+	echo "Error: Unable to  determine page_size/phys_page_size  size" 
+fi
+
+}
+
+
+#Main Run 
+_real_mem_
+_used_mem_
+_calc_it_
+#Write 2 sysctl.conf
+#
+
