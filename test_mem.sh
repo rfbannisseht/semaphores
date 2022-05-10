@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+#
 #check in pg hoe groot onderstaande is 
 #shared_buffers = x
 #effective_cache_size = x
+nrTot=`ps -ef |wc -l` 
 
 _real_mem_ () { 
 
@@ -13,7 +15,7 @@ echo real mem is $r_m
 
 _used_mem_ () { 
 
-export U_M="`ps -eo size,pid,user,command --sort -size|awk '{ nT=$1 ; printf("%20.0f MB ",nT)} {for (c=4;c<=NF;c++) {printf("%s ",$c) } print "" }'|awk '{t=t + $1} END {print t}'`"
+export U_M="`ps -eo size --sort -size|awk -v c=$nrTot '{ nT=$1 ; printf("%20.0f MB ",nT)} {for (c;c<=NF;c++) {printf("%s ",$c) } print "" }'|awk '{t=t + $1} END {print t}'`"
 echo " Total used by process ${U_M} in Bytes "
 
 }
@@ -48,4 +50,14 @@ _used_mem_
 _calc_it_
 #Write 2 sysctl.conf
 #
+#sysctl -w kernel.shmall=$shmal
+#sysctl -w kernel.shmmax=$shmmax
 
+if [  -d /etc/sysctl.d/088_test.conf ]
+then
+	rm -f /etc/sysctl.d/088_test.conf
+else
+	echo "kernel.shmall=$shmall " >> /etc/sysctl.d/088_test.conf
+	echo "kernel.shmmax=$shmmax " >> /etc/sysctl.d/088_test.conf
+/usr/sbin/sysctl -p 
+fi
